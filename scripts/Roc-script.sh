@@ -9,6 +9,24 @@ sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ Built by ycna')/g" feeds/luci/mod
 # sed -i 's/reg = <0x0 0x4ab00000 0x0 0x[0-9a-f]\+>/reg = <0x0 0x4ab00000 0x0 0x04000000>/' target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq6018-512m.dtsi
 sed -i 's/reg = <0x0 0x4ab00000 0x0 0x[0-9a-f]\+>/reg = <0x0 0x4ab00000 0x0 0x06000000>/' target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq6018-512m.dtsi
 
+# 在 OpenWrt 源码的 package/kernel/linux/modules/netsupport.mk 文件中添加以下内容：
+echo 'define KernelPackage/xdp-sockets-diag
+SUBMENU:=$(NETWORK_SUPPORT_MENU)
+TITLE:=PF_XDP sockets monitoring interface support for ss utility
+KCONFIG:= \
+CONFIG_XDP_SOCKETS=y \
+CONFIG_XDP_SOCKETS_DIAG
+FILES:=$(LINUX_DIR)/net/xdp/xsk_diag.ko
+AUTOLOAD:=$(call AutoLoad,31,xsk_diag)
+endef
+define KernelPackage/xdp-sockets-diag/description
+Support for PF_XDP sockets monitoring interface used by the ss tool
+endef
+$(eval $(call KernelPackage,xdp-sockets-diag))' >> package/kernel/linux/modules/netsupport.mk
+
+# 在 .config 文件中启用该模块：
+echo 'CONFIG_PACKAGE_kmod-xdp-sockets-diag=y' >> .config
+
 # 移除要替换的包
 rm -rf feeds/luci/applications/luci-app-appfilter
 rm -rf feeds/luci/applications/luci-app-frpc
